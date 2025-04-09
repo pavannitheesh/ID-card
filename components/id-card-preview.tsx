@@ -38,36 +38,49 @@ export default function IdCardPreview({
   }
 
   const downloadIDCard = async () => {
-    const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.gap = '20px';
-    container.style.padding = '20px';
-    container.style.background = 'white';
-    
-    // Clone front and back cards
-    const frontCard = idCardRef.current.cloneNode(true);
-    const backCard = backCardRef.current.cloneNode(true);
-    
+    const isModern = currentStyle === "modern";
+  
+    const frontRef = idCardRef.current;
+    const backRef = isModern ? null : backCardRef.current;
+  
+    if (!frontRef || (!isModern && !backRef)) {
+      console.error("One or both card references are null.");
+      return;
+    }
+  
+    const container = document.createElement("div");
+    container.style.display = "flex";
+    container.style.gap = "20px";
+    container.style.padding = "20px";
+    container.style.background = "white";
+  
+    // Clone only what's available
+    const frontCard = frontRef.cloneNode(true);
     container.appendChild(frontCard);
-    container.appendChild(backCard);
+  
+    if (!isModern && backRef) {
+      const backCard = backRef.cloneNode(true);
+      container.appendChild(backCard);
+    }
+  
     document.body.appendChild(container);
-
     setIsGenerating(true);
-
+  
     try {
       const dataUrl = await toPng(container, { quality: 0.95 });
-
-      const link = document.createElement('a');
-      link.download = `${studentData.name.replace(/\s+/g, '-')}-ID-Card.png`;
+  
+      const link = document.createElement("a");
+      link.download = `${studentData.name.replace(/\s+/g, "-")}-ID-Card.png`;
       link.href = dataUrl;
       link.click();
     } catch (error) {
-      console.error('Error generating image:', error);
+      console.error("Error generating image:", error);
     } finally {
       document.body.removeChild(container);
       setIsGenerating(false);
     }
   };
+  
 
   const handleStyleChange = (value) => {
     setCurrentStyle(value)
